@@ -1,16 +1,19 @@
 [build]
   base = "client"
   publish = ".next"
-  command = "pnpm install && pnpm run build"
+  command = """
+    pnpm install --frozen-lockfile=false && \
+    pnpm run build
+  """
 
 [build.environment]
-  NODE_VERSION = "18"
-  NPM_FLAGS = "--no-lockfile"
+  NEXT_PUBLIC_SITE_URL = "https://tulpar-express.netlify.app"
+  NODE_VERSION = "18.17.0"
   NEXT_PUBLIC_API_URL = "https://api.te.kg"
   NEXT_PUBLIC_SUPABASE_URL = "https://eacpkbrvpxhejgwyziwd.supabase.co"
   NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhY3BrYnJ2cHhoZWpnd3l6aXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDE5NTk5NDAsImV4cCI6MjAxNzUzNTk0MH0.1CAOvhWWxHBzEQEbTJvRjFAEKTlX2-yWVnRzpg-VBMU"
-  SKIP_INSTALL_DEPS = "true"
-  NEXT_PUBLIC_SITE_URL = "https://tulpar-express.netlify.app"
+  NETLIFY_USE_PNPM = "true"
+  NETLIFY_NEXT_CACHE = "true"
 
 [build.processing]
   skip_processing = false
@@ -22,12 +25,6 @@
 [build.processing.js]
   bundle = true
   minify = true
-
-[build.processing.html]
-  pretty_urls = true
-
-[build.processing.images]
-  compress = true
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
@@ -44,7 +41,6 @@
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Content-Security-Policy = "default-src 'self' https://api.te.kg https://*.supabase.co; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://telegram.org https://*.telegram.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.telegram.org; connect-src 'self' https://api.te.kg https://*.supabase.co wss://*.supabase.co https://telegram.org https://*.telegram.org;"
 
 [functions]
   directory = "netlify/functions"
