@@ -48,10 +48,10 @@ export default function DashboardPage() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
-            Добро пожаловать, {user?.firstName}!
+            Добро пожаловать, {user?.first_name}!
           </h1>
           <p className="text-muted-foreground">
-            Ваш код клиента: {user?.clientCode}
+            Ваш код клиента: {user?.client_code}
           </p>
         </div>
         <Button>Создать отправление</Button>
