@@ -2,7 +2,7 @@
   base = "client"
   publish = ".next"
   command = """
-    pnpm install --save-dev typescript@5.3.3 @types/react@18.3.14 @types/node@20.17.9 && \
+    pnpm install typescript@5.3.3 @types/react@18.3.14 @types/node@20.17.9 && \
     pnpm run build
   """
 
@@ -15,6 +15,7 @@
   NETLIFY_USE_PNPM = "true"
   NETLIFY_NEXT_CACHE = "true"
   NPM_FLAGS = "--no-frozen-lockfile"
+  NODE_ENV = "development"
 
 [build.processing]
   skip_processing = false
