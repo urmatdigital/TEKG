@@ -1,7 +1,7 @@
 [build]
   base = "client"
   publish = ".next"
-  command = "/bin/bash -c 'pnpm install && pnpm add -D typescript@5.3.3 @types/react@18.3.14 @types/node@20.17.9 && NODE_ENV=development pnpm run build'"
+  command = "pnpm run netlify-build"
 
 [build.environment]
   NEXT_PUBLIC_SITE_URL = "https://tulpar-express.netlify.app"
