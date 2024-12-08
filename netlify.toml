@@ -2,8 +2,8 @@
   base = "client"
   publish = ".next"
   command = """
-    pnpm install --no-frozen-lockfile && \
-    pnpm add -D typescript@5.3.3 @types/react@18.3.14 @types/node@20.17.9 && \
+    rm -f pnpm-lock.yaml && \
+    pnpm install && \
     pnpm run build
   """
 
