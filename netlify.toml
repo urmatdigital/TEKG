@@ -2,8 +2,9 @@
   base = "client"
   publish = ".next"
   command = """
-    pnpm add -g typescript@5.3.3 @types/react@18.3.14 @types/node@20.17.9 && \
+    pnpm setup && \
     pnpm install && \
+    pnpm add typescript@5.3.3 @types/react@18.3.14 @types/node@20.17.9 && \
     NODE_ENV=development pnpm run build
   """
 
