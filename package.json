@@ -10,14 +10,16 @@
     "dev": "concurrently -k \"npm:dev:*\" --prefix \"[{name}]\" --names \"S,C\" --prefix-colors \"blue.bold,green.bold\" --kill-others",
     "dev:client": "cd client && cross-env FORCE_COLOR=1 npm run dev -- -p 3000",
     "dev:server": "cd server && cross-env FORCE_COLOR=1 npm run start:dev",
-    "build": "npm run build --workspaces",
-    "start": "npm run start --workspaces",
+    "build": "npm run build:server && npm run build:client",
+    "build:server": "cd server && npm run build",
+    "build:client": "cd client && npm run build",
+    "start": "cd server && npm run start:prod",
     "test": "vitest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "install-all": "npm install && cd client && npm install && cd ../server && npm install",
     "railway:build": "npm run install-all && npm run build",
-    "railway:start": "cd server && npm start"
+    "railway:start": "npm run start"
   },
   "devDependencies": {
     "@types/express": "^4.17.17",

@@ -8,7 +8,7 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   login: (user: User, token: string) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 interface AuthProviderProps {
@@ -44,23 +44,25 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(newUser));
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    await Promise.all([
+      localStorage.removeItem('token'),
+      localStorage.removeItem('user'),
+    ]);
   }, []);
 
-  const contextValue: AuthContextType = {
+  const value = {
     user,
     token,
     isAuthenticated: !!token,
     login,
-    logout,
+    logout
   };
 
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
