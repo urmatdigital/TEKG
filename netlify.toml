@@ -1,11 +1,8 @@
 [build]
   base = "client"
   publish = ".next"
-  command = """
-    npm install -g pnpm && \
-    pnpm install && \
-    pnpm run build
-  """
+  command = "pnpm install && pnpm run build"
+
 [build.environment]
   NODE_VERSION = "18"
   NPM_FLAGS = "--no-lockfile"
