@@ -4,12 +4,12 @@
   command = """
     corepack enable && \
     corepack prepare pnpm@latest --activate && \
-    pnpm install --no-frozen-lockfile typescript @types/react @types/node && \
+    pnpm install --no-lockfile typescript @types/react @types/node && \
     pnpm run build
   """
 [build.environment]
   NODE_VERSION = "18"
-  NPM_FLAGS = "--no-frozen-lockfile"
+  NPM_FLAGS = "--no-lockfile"
   NEXT_PUBLIC_API_URL = "https://api.te.kg"
   NEXT_PUBLIC_SUPABASE_URL = "https://eacpkbrvpxhejgwyziwd.supabase.co"
   NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhY3BrYnJ2cHhoZWpnd3l6aXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDE5NTk5NDAsImV4cCI6MjAxNzUzNTk0MH0.1CAOvhWWxHBzEQEbTJvRjFAEKTlX2-yWVnRzpg-VBMU"
