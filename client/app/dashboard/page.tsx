@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/atoms/Button';
+import { Button } from '@/components/ui/button';
 import { Package, Truck, Clock, MapPin } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -48,7 +48,7 @@ export default function DashboardPage() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
-            Добро пожаловать, {user?.first_name}!
+            Добро пожаловать, {user?.full_name || 'Клиент'}!
           </h1>
           <p className="text-muted-foreground">
             Ваш код клиента: {user?.client_code}

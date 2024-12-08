@@ -1,18 +1,23 @@
-import RegisterForm from '@/components/auth/register-form';
+'use client';
+
+import { RegisterForm } from '@/components/auth/register-form';
 import Link from 'next/link';
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="container mx-auto flex min-h-screen flex-col items-center justify-center px-4">
+      <div className="w-full max-w-md space-y-8">
         <div>
-          <h1 className="text-center text-3xl font-extrabold text-gray-900">
-            TULPAR EXPRESS
-          </h1>
+          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+            Регистрация
+          </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Уже есть аккаунт?{' '}
-            <Link href="/auth/login" className="font-medium text-blue-600 hover:text-blue-500">
-              Войдите
+            <Link
+              href="/auth/login"
+              className="font-medium text-primary hover:text-primary/80"
+            >
+              Войти
             </Link>
           </p>
         </div>

@@ -48,20 +48,22 @@ export const Navbar = () => {
 
             {user ? (
               <div className="flex items-center space-x-4">
-                {user.telegramPhotoUrl && (
+                {user.photo_url && (
                   <img
-                    src={user.telegramPhotoUrl}
+                    src={user.photo_url}
                     alt="Profile"
                     className="h-8 w-8 rounded-full"
                   />
                 )}
                 <div className="hidden md:flex flex-col">
                   <span className="text-sm font-medium text-foreground">
-                    {user.firstName} {user.lastName}
+                    {user.first_name} {user.last_name}
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    {user.clientCode}
-                  </span>
+                  {user?.telegram_id && (
+                    <span className="text-xs text-muted-foreground">
+                      ID: {user.telegram_id}
+                    </span>
+                  )}
                 </div>
                 <Button variant="ghost" onClick={logout}>
                   Выйти

@@ -1,11 +1,10 @@
-import { Controller, Post, Body, UseGuards, Get, Request, Query } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, Query, NotFoundException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { TelegramAuthDto } from './dto/telegram-auth.dto';
-import { SetPasswordDto } from './dto/set-password.dto';
+import { JwtAuthGuard } from './jwt-auth.guard';
 import { AuthResponseDto } from './dto/auth-response.dto';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { SetPasswordDto } from './dto/set-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -18,26 +17,45 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() loginDto: LoginDto): Promise<AuthResponseDto> {
-    const user = await this.authService.validateUser(loginDto.phoneNumber, loginDto.password);
-    if (!user) {
-      throw new Error('Invalid credentials');
-    }
-    return this.authService.login(user);
-  }
-
-  @Post('telegram/login')
-  async telegramLogin(@Body() telegramAuthDto: TelegramAuthDto): Promise<AuthResponseDto> {
-    return this.authService.validateTelegramUser(telegramAuthDto.telegramId);
-  }
-
-  @Post('set-password')
-  async setPassword(@Body() setPasswordDto: SetPasswordDto): Promise<AuthResponseDto> {
-    return this.authService.setPassword(setPasswordDto);
+    return this.authService.validateLogin(loginDto);
   }
 
   @Get('check-status')
   async checkStatus(@Query('phone') phone: string) {
     return this.authService.checkUserStatus(phone);
+  }
+
+  @Get('telegram/check-status')
+  async checkTelegramStatus(@Query('telegramId') telegramId: string) {
+    const user = await this.authService.findUserByTelegramId(telegramId);
+    
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Если у пользователя нет пароля, отправляем флаг needsPassword
+    if (!user.password) {
+      return {
+        needsPassword: true
+      };
+    }
+
+    // Если пароль есть, выполняем вход
+    const authResult = await this.authService.validateLogin({
+      phoneNumber: user.phone,
+      password: user.password
+    });
+    
+    return {
+      needsPassword: false,
+      ...authResult
+    };
+  }
+
+  @Post('telegram/set-password')
+  async setTelegramPassword(@Body() setPasswordDto: SetPasswordDto): Promise<AuthResponseDto> {
+    const { telegramId, password } = setPasswordDto;
+    return this.authService.setPasswordByTelegramId(telegramId, password);
   }
 
   @UseGuards(JwtAuthGuard)

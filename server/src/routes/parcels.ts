@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { ParcelController } from '../controllers/ParcelController';
-import { authenticateToken } from '../middleware/auth';
+import { authenticateToken } from '../guards/auth.guard';
 
 const router = Router();
 const parcelController = new ParcelController();
@@ -19,8 +19,5 @@ router.get('/user/:user_id', authenticateToken, (req, res) => parcelController.g
 
 // Update parcel status
 router.patch('/:id/status', authenticateToken, (req, res) => parcelController.updateParcelStatus(req, res));
-
-// Get all parcels (admin only)
-router.get('/', authenticateToken, (req, res) => parcelController.getAllParcels(req, res));
 
 export default router;

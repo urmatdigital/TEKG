@@ -14,6 +14,15 @@ export interface TelegramSession {
   user: TelegramUser
 }
 
+export interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  isAuthenticated: boolean;
+  signInWithTelegram: (telegramData: any) => Promise<void>;
+  signOut: () => Promise<void>;
+  loginWithPassword: (phone: string, password: string) => Promise<void>;
+}
+
 // Простая заглушка для типа провайдера
 declare global {
   namespace Supabase {

@@ -9,7 +9,7 @@ export default function ReferralInfo() {
   const { user } = useAuth();
 
   const copyReferralLink = async () => {
-    const referralLink = `https://t.me/tulparkgbot?start=${user?.referralCode}`;
+    const referralLink = `https://t.me/tulparkgbot?start=${user?.client_code}`;
     try {
       await navigator.clipboard.writeText(referralLink);
       alert('Реферальная ссылка скопирована!');
@@ -28,23 +28,16 @@ export default function ReferralInfo() {
       </Typography>
       
       <Typography variant="body1" paragraph>
-        Ваш реферальный код: <strong>{user.referralCode}</strong>
+        Ваш код приглашения: <strong>{user.client_code || '-'}</strong>
       </Typography>
       
-      <Typography variant="body1" paragraph>
-        Баланс реферальных бонусов: <strong>{user.referralBalance} ₸</strong>
-      </Typography>
-      
-      <Typography variant="body1" paragraph>
-        Кэшбэк баланс: <strong>{user.cashbackBalance} ₸</strong>
-      </Typography>
-
       <Button
         variant="contained"
+        color="primary"
         startIcon={<ShareIcon />}
         onClick={copyReferralLink}
       >
-        Скопировать реферальную ссылку
+        Скопировать ссылку
       </Button>
     </Card>
   );

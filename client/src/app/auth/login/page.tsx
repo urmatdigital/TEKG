@@ -2,12 +2,13 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
 import { formatPhoneNumber } from '@/utils/phone'
+import { useAuth } from '@/components/providers'
 
 function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { loginWithPassword } = useAuth()
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -30,44 +31,11 @@ function LoginContent() {
       // Форматируем телефон перед поиском
       const formattedPhone = formatPhoneNumber(phone)
 
-      // Ищем пользователя по телефону
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('phone', formattedPhone)
-        .single()
-
-      if (profileError) {
-        setError('Пользователь не найден')
-        return
-      }
-
       // Пробуем войти
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email: `${profile.telegram_id}@telegram.user`,
-        password: password
-      })
-
-      if (signInError) {
-        setError('Неверный пароль')
-        return
-      }
-
-      // Дожидаемся успешного входа перед редиректом
-      if (data.session) {
-        // Устанавливаем сессию
-        await supabase.auth.setSession(data.session)
-        // Проверяем сессию перед редиректом
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session) {
-          router.push('/dashboard')
-        } else {
-          setError('Ошибка авторизации')
-        }
-      }
-    } catch (error) {
-      console.error('Login error:', error)
-      setError('Произошла ошибка при входе')
+      await loginWithPassword(formattedPhone, password)
+      router.push('/dashboard')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Произошла ошибка при входе')
     } finally {
       setLoading(false)
     }

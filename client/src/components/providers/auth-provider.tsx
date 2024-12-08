@@ -3,14 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@/types/user';
-
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  isAuthenticated: boolean;
-  signInWithTelegram: (telegramData: any) => Promise<void>;
-  signOut: () => Promise<void>;
-}
+import { AuthContextType } from '@/types/auth.types';
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -18,6 +11,7 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   signInWithTelegram: async () => {},
   signOut: async () => {},
+  loginWithPassword: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -66,19 +60,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
+  const loginWithPassword = async (phone: string, password: string) => {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('phone', phone)
+      .single();
+
+    if (profileError) {
+      throw new Error('Пользователь не найден');
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: `${profile.telegram_id}@telegram.user`,
+      password: password
+    });
+
+    if (signInError) {
+      throw signInError;
+    }
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      loading,
-      isAuthenticated: !!user,
-      signInWithTelegram,
-      signOut
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        isAuthenticated: !!user,
+        signInWithTelegram,
+        signOut,
+        loginWithPassword,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

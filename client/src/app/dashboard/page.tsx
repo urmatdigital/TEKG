@@ -40,6 +40,9 @@ export default function DashboardPage() {
           <PackagesList />
         </div>
       </div>
+      <div>
+        Добро пожаловать, {user?.full_name}!
+      </div>
     </div>
   )
 } 

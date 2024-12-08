@@ -1,47 +1,39 @@
-import { useState, useCallback, createContext, useContext, useEffect } from 'react';
+'use client';
 
-interface User {
-  id: string;
-  clientCode: string;
-  firstName: string;
-  lastName: string;
-  telegramUsername?: string;
-  telegramPhotoUrl?: string;
-  balance: number;
-  referralBalance: number;
-  cashbackBalance: number;
-  isVerified: boolean;
-  isAdmin: boolean;
-}
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import type { User } from '../types/auth';
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  isAuthenticated: boolean;
   login: (user: User, token: string) => void;
   logout: () => void;
-  isAuthenticated: boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  token: null,
-  login: () => {},
-  logout: () => {},
-  isAuthenticated: false,
-});
+interface AuthProviderProps {
+  children: ReactNode;
+}
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+const AuthContext = createContext<AuthContextType | null>(null);
+
+const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    // При инициализации проверяем наличие сохраненных данных
     const savedToken = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
 
     if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+      try {
+        setToken(savedToken);
+        setUser(JSON.parse(savedUser));
+      } catch (error) {
+        console.error('Error parsing saved user:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
     }
   }, []);
 
@@ -59,25 +51,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem('user');
   }, []);
 
+  const contextValue: AuthContextType = {
+    user,
+    token,
+    isAuthenticated: !!token,
+    login,
+    logout,
+  };
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        login,
-        logout,
-        isAuthenticated: !!token,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
+const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
+  
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
+  
   return context;
 };
+
+export { AuthProvider, useAuth };

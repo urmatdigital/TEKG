@@ -1,42 +1,64 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ nullable: true })
-  email: string;
+  email?: string;
 
   @Column({ nullable: true })
-  password: string;
+  password?: string;
 
-  @Column({ name: 'first_name', nullable: true })
-  firstName: string;
+  @Column({ nullable: true })
+  phone?: string;
 
-  @Column({ name: 'last_name', nullable: true })
-  lastName: string;
+  @Column({ unique: true, nullable: true })
+  telegram_id?: string;
 
-  @Column({ name: 'telegram_id', nullable: true, unique: true })
-  telegramId: string;
+  @Column({ unique: true, nullable: true })
+  telegram_chat_id?: string;
 
-  @Column({ name: 'phone_number', nullable: true })
-  phoneNumber: string;
+  @Column({ nullable: true })
+  telegram_username?: string;
 
-  @Column({ name: 'referral_code', nullable: true, unique: true })
-  referralCode: string;
+  @Column({ nullable: true })
+  telegram_first_name?: string;
 
-  @Column({ name: 'referral_balance', type: 'decimal', default: 0 })
-  referralBalance: number;
+  @Column({ nullable: true })
+  telegram_last_name?: string;
 
-  @Column({ name: 'referred_by', nullable: true })
-  referredBy: string;
+  @Column({ nullable: true })
+  telegram_photo_url?: string;
 
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  @Column({ unique: true })
+  client_code: string;
 
-  @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
+  @Column({ unique: true })
+  referral_code: string;
+
+  @Column({ type: 'uuid', nullable: true })
+  referred_by?: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  referral_balance: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  cashback_balance: number;
+
+  @CreateDateColumn({ type: 'timestamp with time zone' })
+  created_at: Date;
+
+  @UpdateDateColumn({ type: 'timestamp with time zone' })
+  updated_at: Date;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'referred_by' })
+  referrer: User;
+
+  @OneToMany(() => User, user => user.referrer)
+  referrals: User[];
 
   constructor(partial: Partial<User>) {
     Object.assign(this, partial);

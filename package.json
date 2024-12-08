@@ -15,7 +15,9 @@
     "test": "vitest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "install-all": "npm install && cd client && npm install && cd ../server && npm install"
+    "install-all": "npm install && cd client && npm install && cd ../server && npm install",
+    "railway:build": "npm run install-all && npm run build",
+    "railway:start": "cd server && npm start"
   },
   "devDependencies": {
     "@types/express": "^4.17.17",

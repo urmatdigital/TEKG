@@ -1,8 +1,13 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth'
+import Link from 'next/link'
+import { cn } from '@/lib/utils'
+import { Home, Package, Search, Users, LogOut } from '@/components/icons'
+import Button from '@/components/ui/Button'
 
 export default function DashboardLayout({
   children,
@@ -10,6 +15,8 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
+  const pathname = usePathname()
+  const { signOut } = useAuth()
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -32,31 +39,73 @@ export default function DashboardLayout({
     }
   }, [router])
 
+  const navigation = [
+    { name: 'Главная', href: '/dashboard', icon: Home },
+    { name: 'Отправления', href: '/dashboard/shipments', icon: Package },
+    { name: 'Отслеживание', href: '/dashboard/tracking', icon: Search },
+    { name: 'Рефералы', href: '/dashboard/referrals', icon: Users },
+  ]
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <span className="text-xl font-bold text-gray-800">Tulpar Express</span>
+    <div className="min-h-screen bg-background">
+      <div className="flex">
+        {/* Боковая навигация */}
+        <div className="hidden md:flex md:w-64 md:flex-col">
+          <div className="flex min-h-0 flex-1 flex-col border-r">
+            <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
+              <div className="flex flex-shrink-0 items-center px-4">
+                <Link href="/" className="flex items-center">
+                  <span className="text-xl font-bold">TE.KG</span>
+                </Link>
               </div>
+              <nav className="mt-5 flex-1 space-y-1 px-2">
+                {navigation.map((item) => {
+                  const isActive = pathname === item.href
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={cn(
+                        'group flex items-center px-2 py-2 text-sm font-medium rounded-md',
+                        isActive
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:bg-muted'
+                      )}
+                    >
+                      <item.icon
+                        className={cn(
+                          'mr-3 h-5 w-5',
+                          isActive
+                            ? 'text-primary-foreground'
+                            : 'text-muted-foreground group-hover:text-foreground'
+                        )}
+                      />
+                      {item.name}
+                    </Link>
+                  )
+                })}
+              </nav>
             </div>
-            <div className="flex items-center">
-              <button
-                onClick={() => supabase.auth.signOut()}
-                className="ml-4 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            <div className="flex flex-shrink-0 border-t p-4">
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => signOut()}
               >
+                <LogOut className="mr-3 h-5 w-5" />
                 Выйти
-              </button>
+              </Button>
             </div>
           </div>
         </div>
-      </nav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {children}
-      </main>
+        {/* Основной контент */}
+        <div className="flex flex-1 flex-col">
+          <main className="flex-1">
+            {children}
+          </main>
+        </div>
+      </div>
     </div>
   )
-} 
+}

@@ -12,7 +12,7 @@ const TelegramLoginPage = () => {
       try {
         if (!id) return;
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/telegram-login?id=${id}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/telegram/check-status?telegramId=${id}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -25,18 +25,19 @@ const TelegramLoginPage = () => {
 
         const data = await response.json();
         
-        // Сохраняем токен и данные пользователя
+        if (data.needsPassword) {
+          // Если пользователю нужно установить пароль, перенаправляем на страницу установки пароля
+          router.push(`/auth/set-password?telegram_id=${id}`);
+          return;
+        }
+
+        // Если пароль уже установлен, выполняем вход
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-
-        // Обновляем состояние авторизации
         login(data.user, data.token);
-
-        // Перенаправляем на главную страницу
         router.push('/');
       } catch (error) {
         console.error('Ошибка при авторизации через Telegram:', error);
-        // В случае ошибки перенаправляем на страницу входа
         router.push('/auth/login');
       }
     };

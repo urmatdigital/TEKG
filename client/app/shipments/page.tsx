@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { ShipmentList } from '@/components/shipment/ShipmentList';
-import { Button } from '@/components/atoms/Button';
+import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
 // Моковые данные для демонстрации

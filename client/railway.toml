@@ -1,0 +1,14 @@
+[build]
+builder = "nixpacks"
+buildCommand = "pnpm install && pnpm build"
+
+[deploy]
+startCommand = "pnpm start"
+healthcheckPath = "/"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+numReplicas = 1
+
+[variables]
+NEXT_PUBLIC_API_URL = "https://api.te.kg"
+NEXT_PUBLIC_SITE_URL = "https://te.kg"
