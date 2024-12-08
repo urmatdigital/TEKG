@@ -2,9 +2,8 @@
   base = "client"
   publish = ".next"
   command = """
-    corepack enable && \
-    corepack prepare pnpm@latest --activate && \
-    pnpm install --no-lockfile typescript @types/react @types/node && \
+    npm install -g pnpm && \
+    pnpm install && \
     pnpm run build
   """
 [build.environment]
