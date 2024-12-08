@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
 import { LegacyClient } from '../../auth/entities/legacy-client.entity';
 import { ReferralTransaction } from '../../auth/entities/referral-transaction.entity';
+import { Order } from '../../orders/entities/order.entity';
 import * as bcrypt from 'bcrypt';
 import { MoySkladService } from '../../services/moysklad.service';
 
@@ -16,6 +17,8 @@ export class UserService {
     private readonly legacyClientRepository: Repository<LegacyClient>,
     @InjectRepository(ReferralTransaction)
     private readonly referralTransactionRepository: Repository<ReferralTransaction>,
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
     private readonly moyskladService: MoySkladService
   ) {}
 
@@ -107,6 +110,20 @@ export class UserService {
     return this.findByTelegramId(telegramId);
   }
 
+  async upsertUser(userData: Partial<User>): Promise<User> {
+    const existingUser = await this.findByTelegramId(userData.telegram_id);
+    
+    if (existingUser) {
+      // Обновляем существующего пользователя
+      await this.userRepository.update(existingUser.id, userData);
+      return this.userRepository.findOne({ where: { id: existingUser.id } });
+    }
+
+    // Создаем нового пользователя
+    const user = this.userRepository.create(userData);
+    return this.userRepository.save(user);
+  }
+
   async createReferralTransaction(data: {
     userId: string;
     referredUserId: string;
@@ -145,13 +162,9 @@ export class UserService {
     phone: string;
     client_code: string;
     referral_code: string;
-    referred_by?: User | null;
+    referred_by?: string;
   }): Promise<User> {
     let user = await this.findByTelegramId(data.telegram_id);
-    
-    if (!user) {
-      user = await this.findByPhone(data.phone);
-    }
 
     if (user) {
       // Update existing user
@@ -165,7 +178,10 @@ export class UserService {
 
     // Process referral if exists
     if (data.referred_by) {
-      await this.processReferralBonus(data.referred_by, user);
+      const referrer = await this.findByReferralCode(data.referred_by);
+      if (referrer) {
+        await this.processReferralBonus(referrer, user);
+      }
     }
 
     return user;
@@ -194,13 +210,8 @@ export class UserService {
     });
   }
 
-  async processOrderCommission(orderId: string, amount: number): Promise<void> {
-    const order = await this.orderRepository.findOne({
-      where: { id: orderId },
-      relations: ['user', 'user.referred_by']
-    });
-
-    if (!order) return;
+  async processOrderCommission(order: Order, amount: number): Promise<void> {
+    if (!order.user) return;
 
     // Process cashback for the user (2%)
     const cashbackAmount = amount * 0.02;
@@ -210,29 +221,34 @@ export class UserService {
       cashbackAmount
     );
 
+    // Record the transaction
     await this.referralTransactionRepository.save({
       user_id: order.user.id,
-      referred_user_id: order.user.id,
-      order_id: orderId,
       amount: cashbackAmount,
-      type: 'CASHBACK'
+      type: 'CASHBACK',
+      order_id: order.id
     });
 
-    // Process commission for referrer if exists (1%)
-    if (order.user.referred_by) {
+    // If user was referred, give commission to referrer (1%)
+    const referrer = await this.userRepository.findOne({
+      where: { id: order.user.referred_by }
+    });
+
+    if (referrer) {
       const commissionAmount = amount * 0.01;
       await this.userRepository.increment(
-        { id: order.user.referred_by.id },
+        { id: referrer.id },
         'referral_balance',
         commissionAmount
       );
 
+      // Record the referral commission transaction
       await this.referralTransactionRepository.save({
-        user_id: order.user.referred_by.id,
+        user_id: referrer.id,
         referred_user_id: order.user.id,
-        order_id: orderId,
         amount: commissionAmount,
-        type: 'ORDER_COMMISSION'
+        type: 'ORDER_COMMISSION',
+        order_id: order.id
       });
     }
   }

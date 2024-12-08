@@ -58,7 +58,8 @@
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.0",
     "telegraf": "^4.16.3",
-    "typeorm": "^0.3.20"
+    "typeorm": "^0.3.20",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

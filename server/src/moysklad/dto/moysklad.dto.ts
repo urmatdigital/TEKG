@@ -33,11 +33,18 @@ export class CreateCustomerDto {
   phone: string;
 
   @ApiProperty({
-    description: 'Email адрес',
+    description: 'Email клиента',
     example: 'user@example.com',
     required: false
   })
   email?: string;
+
+  @ApiProperty({
+    description: 'Дополнительная информация о клиенте',
+    example: 'VIP клиент',
+    required: false
+  })
+  description?: string;
 }
 
 export class CustomerResponseDto {

@@ -1,15 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import type { User } from '../types/auth';
-
-interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  login: (user: User, token: string) => void;
-  logout: () => Promise<void>;
-}
+import { z } from 'zod';
+import { User, AuthContextType, UserSchema, AuthContextSchema } from '../types/auth';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -27,10 +20,13 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     if (savedToken && savedUser) {
       try {
+        const parsedUser = JSON.parse(savedUser);
+        // Валидация данных с помощью Zod
+        const validatedUser = UserSchema.parse(parsedUser);
         setToken(savedToken);
-        setUser(JSON.parse(savedUser));
+        setUser(validatedUser);
       } catch (error) {
-        console.error('Error parsing saved user:', error);
+        console.error('Error parsing or validating saved user:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
@@ -38,19 +34,26 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = useCallback((newUser: User, newToken: string) => {
-    setUser(newUser);
-    setToken(newToken);
-    localStorage.setItem('token', newToken);
-    localStorage.setItem('user', JSON.stringify(newUser));
+    try {
+      // Валидация входных данных
+      const validatedUser = UserSchema.parse(newUser);
+      z.string().parse(newToken);
+
+      setUser(validatedUser);
+      setToken(newToken);
+      localStorage.setItem('token', newToken);
+      localStorage.setItem('user', JSON.stringify(validatedUser));
+    } catch (error) {
+      console.error('Invalid login data:', error);
+      throw new Error('Invalid login data');
+    }
   }, []);
 
-  const logout = useCallback(async () => {
+  const logout = useCallback(() => {
     setUser(null);
     setToken(null);
-    await Promise.all([
-      localStorage.removeItem('token'),
-      localStorage.removeItem('user'),
-    ]);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   }, []);
 
   const value = {
@@ -61,8 +64,11 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout
   };
 
+  // Валидация контекста перед передачей
+  const validatedValue = AuthContextSchema.parse(value);
+
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={validatedValue}>
       {children}
     </AuthContext.Provider>
   );

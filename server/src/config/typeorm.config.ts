@@ -1,4 +1,5 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { User } from '../auth/entities/user.entity';
 import { LegacyClient } from '../auth/entities/legacy-client.entity';
 import { ReferralTransaction } from '../auth/entities/referral-transaction.entity';
@@ -23,3 +24,8 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   logging: process.env.NODE_ENV === 'development',
   autoLoadEntities: true
 };
+
+export const AppDataSource = new DataSource({
+  ...typeOrmConfig,
+  type: 'postgres',
+});

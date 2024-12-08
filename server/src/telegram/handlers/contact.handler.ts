@@ -1,84 +1,69 @@
 import { Injectable } from '@nestjs/common';
 import { Context } from 'telegraf';
-import { Message } from 'telegraf/types';
 import { UserService } from '../services/user.service';
-import { BaseHandler } from './base.handler';
-import { ConfigService } from '@nestjs/config';
+import { User } from '../../auth/entities/user.entity';
+import { generateReferralCode } from '../../utils/referral';
+
+interface SessionData {
+  referralCode?: string;
+  step?: string;
+}
+
+interface MyContext extends Context {
+  session?: SessionData;
+}
 
 @Injectable()
-export class ContactHandler extends BaseHandler {
-  private readonly clientUrl: string;
-  private readonly baseUrl: string;
+export class ContactHandler {
+  constructor(private readonly userService: UserService) {}
 
-  constructor(
-    userService: UserService,
-    private configService: ConfigService
-  ) {
-    super(userService);
-    // В development используем localhost, в production - реальный домен
-    this.clientUrl = this.configService.get('NODE_ENV') === 'production' 
-      ? 'https://te.kg'
-      : 'https://te.kg'; // Временно используем te.kg даже в development
-    
-    this.baseUrl = this.configService.get('BASE_URL') || 'https://api.te.kg';
-  }
+  async handle(ctx: MyContext) {
+    if (!ctx.message || !('contact' in ctx.message)) {
+      await ctx.reply('Пожалуйста, поделитесь контактом через специальную кнопку.');
+      return;
+    }
 
-  async handle(ctx: Context) {
+    const contact = ctx.message.contact;
+    const telegramId = ctx.from?.id.toString();
+
+    if (!telegramId) {
+      await ctx.reply('Не удалось получить ваш Telegram ID. Пожалуйста, попробуйте позже.');
+      return;
+    }
+
     try {
-      const telegramId = await this.getTelegramId(ctx);
-      if (!telegramId) return;
+      // Генерируем коды для нового пользователя
+      const clientCode = await this.userService.generateNextClientCode();
+      const referralCode = generateReferralCode();
 
-      const message = ctx.message as Message.ContactMessage;
-      const contact = message.contact;
-
-      if (!contact || contact.user_id?.toString() !== telegramId) {
-        await ctx.reply('Пожалуйста, отправьте свой собственный контакт.');
-        return;
-      }
-
-      const user = await this.userService.findByTelegramId(telegramId);
-      if (user) {
-        await ctx.reply('Вы уже зарегистрированы!');
-        return;
-      }
-
-      // Создаем нового пользователя
-      const newUser = await this.userService.createUser({
-        telegramId: telegramId,
-        phoneNumber: contact.phone_number,
-        firstName: contact.first_name,
-        lastName: contact.last_name,
+      // Создаем или обновляем пользователя
+      const user = await this.userService.createOrUpdateUser({
+        telegram_id: telegramId,
+        telegram_chat_id: ctx.chat?.id.toString() || '',
+        telegram_username: ctx.from?.username,
+        telegram_first_name: ctx.from?.first_name,
+        telegram_last_name: ctx.from?.last_name,
+        phone: contact.phone_number,
+        client_code: clientCode,
+        referral_code: referralCode,
+        referred_by: ctx.session?.referralCode
       });
 
-      // Создаем URL для установки пароля с учетом API префикса
-      const setPasswordUrl = `${this.clientUrl}/api/auth/set-password`;
-      const phoneParam = encodeURIComponent(newUser.phoneNumber);
-
+      // Отправляем приветственное сообщение
       await ctx.reply(
-        'Регистрация почти завершена! Для создания пароля перейдите на сайт, нажав кнопку ниже.',
-        {
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: '🔐 Создать пароль',
-                  url: `${setPasswordUrl}?phone=${phoneParam}`
-                }
-              ]
-            ],
-            remove_keyboard: true
-          }
-        }
+        `Спасибо за регистрацию!\n\n` +
+        `Ваш код клиента: ${clientCode}\n` +
+        `Ваш реферальный код: ${referralCode}\n\n` +
+        'Теперь вам нужно установить пароль для входа в личный кабинет.'
       );
 
-      // Отправляем дополнительное сообщение с номером телефона
-      await ctx.reply(
-        `Ваш номер телефона для входа: ${newUser.phoneNumber}\n` +
-        'Используйте его вместе с паролем, который вы создадите на сайте.'
-      );
+      // Переходим к установке пароля
+      if (ctx.session) {
+        ctx.session.step = 'WAITING_PASSWORD';
+      }
     } catch (error) {
-      console.error('Ошибка при обработке контакта:', error);
-      await ctx.reply('Произошла ошибка. Пожалуйста, попробуйте позже или обратитесь в поддержку.');
+      console.error('Error handling contact:', error);
+      await ctx.reply('Произошла ошибка при обработке контакта. Пожалуйста, попробуйте позже.');
     }
   }
 }

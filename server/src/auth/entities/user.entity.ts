@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
+import { Order } from '../../orders/entities/order.entity';
 
 @Entity('users')
 export class User {
@@ -59,6 +60,9 @@ export class User {
 
   @OneToMany(() => User, user => user.referrer)
   referrals: User[];
+
+  @OneToMany(() => Order, order => order.user)
+  orders: Order[];
 
   constructor(partial: Partial<User>) {
     Object.assign(this, partial);

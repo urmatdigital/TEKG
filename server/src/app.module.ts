@@ -8,6 +8,7 @@ import { typeOrmConfig } from './config/typeorm.config';
 import { HealthController } from './controllers/health.controller';
 import { TelegramModule } from './telegram/telegram.module';
 import { User } from './auth/entities/user.entity';
+import { ReferralsModule } from './referrals/referrals.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { User } from './auth/entities/user.entity';
     UserModule,
     MoySkladModule,
     TelegramModule,
+    ReferralsModule,
   ],
   controllers: [HealthController],
   providers: [],

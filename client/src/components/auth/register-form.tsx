@@ -53,12 +53,15 @@ export function RegisterForm() {
           body: JSON.stringify({ phone: values.phone }),
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-          throw new Error('Ошибка при отправке кода');
+          throw new Error(data.error || 'Failed to send code');
         }
 
-        toast.success('Код подтверждения отправлен');
-        setStep('code');
+        // Redirect to Telegram bot
+        window.location.href = data.botUrl;
+        return;
       } else if (step === 'code') {
         const response = await fetch('/api/auth/verify', {
           method: 'POST',
