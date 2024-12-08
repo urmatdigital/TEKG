@@ -1,0 +1,70 @@
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../entities/User.entity';
+import * as bcrypt from 'bcrypt';
+
+@Injectable()
+export class AuthService {
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  async generateToken(user: User): Promise<string> {
+    return this.jwtService.sign(user.toJwtPayload());
+  }
+
+  async validateTelegramUser(telegramId: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { telegramId } });
+  }
+
+  async setPassword(telegramId: string, password: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { telegramId } });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    return this.userRepository.save(user);
+  }
+
+  async validatePassword(user: User, password: string): Promise<boolean> {
+    if (!user.password) {
+      return false;
+    }
+    return bcrypt.compare(password, user.password);
+  }
+
+  async processCashback(userId: string, orderAmount: number): Promise<void> {
+    const user = await this.userRepository.findOne({ 
+      where: { id: userId },
+      relations: ['referredBy']
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Начисляем кешбэк пользователю (2%)
+    const userCashback = orderAmount * 0.02;
+    user.cashbackBalance += userCashback;
+
+    // Если есть реферер, начисляем ему 1%
+    if (user.referredBy) {
+      const referrer = await this.userRepository.findOne({ 
+        where: { id: user.referredBy } 
+      });
+      if (referrer) {
+        const referrerCashback = orderAmount * 0.01;
+        referrer.referralBalance += referrerCashback;
+        await this.userRepository.save(referrer);
+      }
+    }
+
+    await this.userRepository.save(user);
+  }
+}

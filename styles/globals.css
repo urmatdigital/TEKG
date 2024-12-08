@@ -1,0 +1,92 @@
+/* Для темной темы */
+:root[class~="dark"] img[src*="tulpar_text_logo"] {
+  filter: invert(1);
+}
+
+.logo-text {
+  font-weight: bold;
+  font-size: 1.5rem;
+  letter-spacing: 0.05em;
+}
+
+.logo-text .primary {
+  color: #000000;
+}
+
+.logo-text .accent {
+  color: #2563eb;
+}
+
+/* Для темной темы */
+:root[class~="dark"] .logo-text .primary {
+  color: #ffffff;
+}
+
+/* Стили для инпутов в темной теме */
+.dark input {
+  background-color: #374151;
+  border-color: #4B5563;
+  color: #ffffff;
+}
+
+.dark input::placeholder {
+  color: #9CA3AF;
+}
+
+/* Стили для фокуса инпутов */
+input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+/* Анимации для кнопок */
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased text-gray-900 dark:text-gray-100;
+  }
+}
+
+@layer components {
+  .container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+}
+
+/* Плавные переходы для смены темы */
+* {
+  @apply transition-colors duration-200;
+}
+
+/* Стили для скроллбара */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-500;
+}

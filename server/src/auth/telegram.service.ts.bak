@@ -1,0 +1,96 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../entities/User.entity';
+import { TelegramAuthDto } from './dto/telegram-auth.dto';
+import { config } from '../config';
+
+@Injectable()
+export class TelegramService {
+  private lastClientCode: string = 'TE-7000';
+
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {
+    this.initializeLastClientCode();
+  }
+
+  private async initializeLastClientCode() {
+    const lastUser = await this.userRepository.findOne({
+      where: {},
+      order: { clientCode: 'DESC' },
+    });
+    if (lastUser) {
+      this.lastClientCode = lastUser.clientCode;
+    }
+  }
+
+  private generateNextClientCode(): string {
+    const currentNumber = parseInt(this.lastClientCode.split('-')[1]);
+    const nextNumber = currentNumber + 1;
+    this.lastClientCode = `TE-${nextNumber}`;
+    return this.lastClientCode;
+  }
+
+  private generateReferralLink(clientCode: string): string {
+    return `https://t.me/${config.telegram.token.split(':')[0]}?start=ref_${clientCode}`;
+  }
+
+  async findOrCreateUser(telegramData: TelegramAuthDto): Promise<User> {
+    let user = await this.userRepository.findOne({
+      where: { telegramId: telegramData.telegramId },
+    });
+
+    if (!user) {
+      // Проверяем существование пользователя по телефону в старой базе
+      const existingUserByPhone = telegramData.phone 
+        ? await this.userRepository.findOne({ where: { phone: telegramData.phone } })
+        : null;
+
+      user = this.userRepository.create({
+        telegramId: telegramData.telegramId,
+        telegramUsername: telegramData.username,
+        firstName: telegramData.firstName,
+        lastName: telegramData.lastName,
+        telegramPhotoUrl: telegramData.photoUrl,
+        chatId: telegramData.chatId,
+        phone: telegramData.phone,
+        clientCode: existingUserByPhone ? existingUserByPhone.clientCode : this.generateNextClientCode(),
+      });
+
+      user.referralCode = this.generateReferralLink(user.clientCode);
+      await this.userRepository.save(user);
+    }
+
+    return user;
+  }
+
+  async processReferral(referralCode: string, newUserId: string): Promise<void> {
+    const clientCode = referralCode.replace('ref_', '');
+    const referrer = await this.userRepository.findOne({
+      where: { clientCode },
+    });
+
+    if (referrer) {
+      const newUser = await this.userRepository.findOne({
+        where: { id: newUserId },
+      });
+
+      if (newUser && !newUser.referredBy) {
+        newUser.referredBy = referrer.id;
+        referrer.referralBalance += 50; // Начисляем бонус за приглашение
+        
+        await this.userRepository.save(newUser);
+        await this.userRepository.save(referrer);
+      }
+    }
+  }
+
+  async getReferrals(userId: string): Promise<User[]> {
+    return this.userRepository.find({
+      where: { referredBy: userId },
+      select: ['id', 'firstName', 'lastName', 'telegramUsername', 'telegramPhotoUrl', 'createdAt'],
+    });
+  }
+}

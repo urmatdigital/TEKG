@@ -1,0 +1,13 @@
+import { Router } from 'express';
+import authRoutes from './auth.routes';
+import userRoutes from './user.routes';
+
+const router = Router();
+
+// Маршруты аутентификации
+router.use('/auth', authRoutes);
+
+// Маршруты пользователей
+router.use('/users', userRoutes);
+
+export default router;

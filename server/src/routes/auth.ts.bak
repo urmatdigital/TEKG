@@ -1,0 +1,20 @@
+import { Router } from 'express';
+import { AuthController } from '../auth/auth.controller';
+import { AuthService } from '../auth/auth.service';
+import { User } from '../entities/User.entity';
+import { AppDataSource } from '../config/typeorm.config';
+
+const router = Router();
+
+// Инициализируем репозиторий и сервисы
+const userRepository = AppDataSource.getRepository(User);
+const authService = new AuthService(userRepository);
+const authController = new AuthController(authService, userRepository);
+
+// Маршруты аутентификации
+router.post('/register', (req, res) => authController.register(req.body));
+router.post('/login', (req, res) => authController.login(req.body));
+router.get('/telegram-login', (req, res) => authController.telegramLogin({ id: req.query.id as string }));
+router.post('/verify', (req, res) => authController.verifyEmail(req.body));
+
+export default router;
