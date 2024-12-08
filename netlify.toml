@@ -1,11 +1,7 @@
 [build]
   base = "client"
   publish = ".next"
-  command = """
-    rm -f pnpm-lock.yaml && \
-    pnpm install && \
-    pnpm run build
-  """
+  command = "pnpm run build"
 
 [build.environment]
   NEXT_PUBLIC_SITE_URL = "https://tulpar-express.netlify.app"
@@ -15,6 +11,7 @@
   NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhY3BrYnJ2cHhoZWpnd3l6aXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDE5NTk5NDAsImV4cCI6MjAxNzUzNTk0MH0.1CAOvhWWxHBzEQEbTJvRjFAEKTlX2-yWVnRzpg-VBMU"
   NETLIFY_USE_PNPM = "true"
   NETLIFY_NEXT_CACHE = "true"
+  NPM_FLAGS = "--no-frozen-lockfile"
 
 [build.processing]
   skip_processing = false
